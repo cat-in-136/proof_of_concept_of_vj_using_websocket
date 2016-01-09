@@ -29,6 +29,8 @@ get '/socket' do
         settings.sockets.delete(ws)
       end
     end
+  else
+    status 503
   end
 end
 
