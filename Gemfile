@@ -7,4 +7,7 @@ group :test do
   gem 'rake'
   gem 'rspec'
   gem 'rack-test'
+
+  gem 'capybara'
+  gem 'poltergeist'
 end
