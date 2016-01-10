@@ -19,13 +19,3 @@ RSpec.configure do |config|
   end
 end
 
-# http://blog.bruzilla.com/2012/04/10/using-multiple-capybara-sessions-in-rspec-request.html
-def in_browser(name)
-  old_session = Capybara.session_name
-
-  Capybara.session_name = name
-  yield
-
-  Capybara.session_name = old_session
-end
-
