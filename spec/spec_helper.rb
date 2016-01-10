@@ -1,5 +1,8 @@
 ENV['RACK_ENV'] = 'test'
-require 'minitest/autorun'
+require 'rspec'
 require 'rack/test'
 
 require_relative '../app.rb'
+
+RSpec.configure do |config|
+end
