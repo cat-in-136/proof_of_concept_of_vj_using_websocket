@@ -15,7 +15,7 @@ RSpec.configure do |config|
   Capybara.default_driver = :poltergeist
   Capybara.server do |app,port|
     require 'rack/handler/thin'
-    Rack::Handler::Thin.run(app, :Port => port)
+    Rack::Handler::Thin.run(app, :Host => "127.0.0.1", :Port => port)
   end
 end
 

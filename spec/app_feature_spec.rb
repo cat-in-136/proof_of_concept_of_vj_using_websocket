@@ -1,6 +1,6 @@
 require_relative 'app_spec.rb'
 
-describe '/ connects ws://0.0.0.0/socket', :type => :feature do
+describe '/ connects ws://127.0.0.1/socket', :type => :feature do
   include Capybara::DSL
 
   it "send message and then get it", :js => true do
