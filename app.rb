@@ -33,14 +33,18 @@ get '/socket' do
         name = SecureRandom.uuid
         settings.sockets << ClientSocket.new(:name => name, :socket => ws)
         EM.next_tick do
-          settings.controller_socket.send(JSON.generate({:type => 'connected', :name => name}))
-          ws.send(JSON.generate({:type => 'connected', :name => name}))
+          if settings.controller_socket
+            settings.controller_socket.send(JSON.generate({:type => 'connected', :name => name}))
+            ws.send(JSON.generate({:type => 'connected', :name => name}))
+          end
         end
       end
       ws.onmessage do |msg|
         logger.info "<- #{msg}"
         EM.next_tick do
-          settings.controller_socket.send(JSON.generate({:type => 'clientmsg', :value => msg}))
+          if settings.controller_socket
+            settings.controller_socket.send(JSON.generate({:type => 'clientmsg', :value => msg}))
+          end
         end
       end
       ws.onclose do
@@ -48,7 +52,9 @@ get '/socket' do
         if socket
           settings.sockets.delete(socket)
           EM.next_tick do
-            settings.controller_sockets.send(JSON.generate({:type => 'disconnected', :name => name}))
+            if settings.controller_socket
+              settings.controller_socket.send(JSON.generate({:type => 'disconnected', :name => name}))
+            end
           end
         end
       end
