@@ -2,6 +2,8 @@ ENV['RACK_ENV'] = 'test'
 require 'rspec'
 require 'rack/test'
 require 'capybara'
+require 'capybara/dsl'
+require 'capybara/rspec'
 require 'capybara/poltergeist'
 
 require_relative '../app.rb'
