@@ -6,8 +6,20 @@ require 'json'
 require 'securerandom'
 require 'pp'
 
+
+class ClientSocket
+  def initialize(config={})
+    raise ArgumentError unless config[:name].kind_of? String
+    raise ArgumentError unless config[:socket].kind_of? EventMachine::WebSocket::Connection 
+    @guid = config[:name]
+    @group = config[:group] || []
+    @socket = config[:socket]
+  end
+  attr_accessor :name, :group, :socket
+end
+
 set :server, 'thin'
-set :sockets, {}
+set :sockets, []
 set :controller_socket, nil
 
 get '/' do
@@ -19,7 +31,7 @@ get '/socket' do
     request.websocket do |ws|
       ws.onopen do
         name = SecureRandom.uuid
-        settings.sockets[name] = ws
+        settings.sockets << ClientSocket.new(:name => name, :socket => ws)
         EM.next_tick do
           settings.controller_socket.send(JSON.generate({:type => 'connected', :name => name}))
           ws.send(JSON.generate({:type => 'connected', :name => name}))
@@ -32,10 +44,12 @@ get '/socket' do
         end
       end
       ws.onclose do
-        name = settings.sockets.rassoc(ws).first
-        settings.sockets.delete(name)
-        EM.next_tick do
-          settings.controller_sockets.send(JSON.generate({:type => 'disconnected', :name => name}))
+        socket = settings.sockets.find { |v| v.socket == ws }
+        if socket
+          settings.sockets.delete(socket)
+          EM.next_tick do
+            settings.controller_sockets.send(JSON.generate({:type => 'disconnected', :name => name}))
+          end
         end
       end
     end
@@ -63,8 +77,8 @@ get '/controller_socket' do
       ws.onmessage do |msg|
         logger.info "-> #{msg}"
         EM.next_tick do
-          settings.sockets.each do |name,s|
-            s.send(msg)
+          settings.sockets.each do |socket|
+            socket.socket.send(msg)
           end
         end
       end
@@ -78,5 +92,3 @@ get '/controller_socket' do
     status 503
   end
 end
-
-
