@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "sinatra"
 gem "sinatra-websocket"
+gem "json"
 
 group :test do
   gem 'rake'
