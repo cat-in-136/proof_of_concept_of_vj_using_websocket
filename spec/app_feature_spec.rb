@@ -26,6 +26,14 @@ describe 'controller and viewer connection', :type => :feature do
       expect(page).to_not have_content("body")
       expect(page.evaluate_script('$(document.body).css("backgroundColor");')).to eq('rgb(255, 0, 0)')
     end
+
+    # clear session
+    using_session(:controller) do
+      visit "about:blank"
+    end
+    using_session(:viewer) do
+      visit "about:blank"
+    end
   end
 
   it "viewers login and then controller get the notifications", :js => true do
@@ -44,6 +52,17 @@ describe 'controller and viewer connection', :type => :feature do
     end
     using_session(:controller) do
       expect(page).to have_selector("#msg-area li", :count => 2)
+    end
+
+    # clear session
+    using_session(:controller) do
+      visit "about:blank"
+    end
+    using_session(:viewer1) do
+      visit "about:blank"
+    end
+    using_session(:viewer2) do
+      visit "about:blank"
     end
   end
 end
