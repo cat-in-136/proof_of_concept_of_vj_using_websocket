@@ -10,4 +10,9 @@ $(function(){
         var message_li = $('<li>').text(event.data);
         $("#msg-area").append(message_li);
     };
+    
+    ws.onclose = function(event){
+        var message_li = $('<li>').text("CLOSED.");
+        $("#msg-area").append(message_li);
+    };
 });
