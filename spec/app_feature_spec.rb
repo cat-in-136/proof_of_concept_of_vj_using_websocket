@@ -9,6 +9,28 @@ describe 'controller and viewer connection', :type => :feature do
     fill_in 'message', :with => [{:type => 'background', :value => '#ff0000'}].to_json
     click_button 'send'  
   end
+  
+  it "disallow multiple controller sessions", :js => true do
+    using_session(:controller1) do
+      visit "/controller"
+      expect(page).to_not have_selector("#msg-area li")
+    end
+    using_session(:controller2) do
+      visit "/controller"
+      expect(page).to_not have_selector("#msg-area li")
+    end
+    using_session(:controller1) do
+      expect(page).to have_selector("#msg-area li", :count => 1)
+    end
+
+    # clear session
+    using_session(:controller1) do
+      visit "about:blank"
+    end
+    using_session(:controller2) do
+      visit "about:blank"
+    end
+  end
 
   it "controller sends a message and then viewer get it", :js => true do
     using_session(:viewer) do
