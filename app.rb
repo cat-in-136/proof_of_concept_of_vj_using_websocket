@@ -82,9 +82,22 @@ get '/controller_socket' do
       end
       ws.onmessage do |msg|
         logger.info "-> #{msg}"
+        msgobj = nil
+
+        begin
+          msgobj = JSON.parse(msg)
+        rescue JSON::ParserError
+          ws.send(JSON.generate({:type => 'error', :msg => 'Wrong JSON text'}))
+          next # break out
+        end
+
         EM.next_tick do
           settings.sockets.each do |socket|
-            socket.socket.send(msg)
+            sndmsg = msgobj.select do |msg|
+              target = msg["target"]
+              target.nil? || (socket.name == target) || socket.group.include?(target)
+            end
+            socket.socket.send(JSON.generate(sndmsg)) unless sndmsg.empty?
           end
         end
       end
