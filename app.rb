@@ -90,6 +90,10 @@ get '/controller_socket' do
           ws.send(JSON.generate({:type => 'error', :msg => 'Wrong JSON text'}))
           next # break out
         end
+        unless msgobj.instance_of? Array
+          ws.send(JSON.generate({:type => 'error', :msg => 'Not an array'}))
+          next # break out
+        end
 
         EM.next_tick do
           settings.sockets.each do |socket|

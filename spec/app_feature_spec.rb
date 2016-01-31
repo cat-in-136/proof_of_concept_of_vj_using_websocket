@@ -41,6 +41,9 @@ describe 'controller and viewer connection', :type => :feature do
     fill_in 'message', :with => ''
     click_button 'send'
     expect(page).to have_selector("#msg-area li", :count => 2, :text => /error/i)
+    fill_in 'message', :with => JSON.generate({:type => 'background', :value => '#000000'})
+    click_button 'send'
+    expect(page).to have_selector("#msg-area li", :count => 3, :text => /error/i)
   end
 
   it "controller sends a message and then viewer get it", :js => true do
