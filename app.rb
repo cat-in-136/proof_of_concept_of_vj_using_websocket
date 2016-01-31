@@ -11,7 +11,7 @@ class ClientSocket
   def initialize(config={})
     raise ArgumentError unless config[:name].kind_of? String
     raise ArgumentError unless config[:socket].kind_of? EventMachine::WebSocket::Connection 
-    @guid = config[:name]
+    @name = config[:name]
     @group = config[:group] || []
     @socket = config[:socket]
   end
