@@ -53,7 +53,7 @@ get '/socket' do
           settings.sockets.delete(socket)
           EM.next_tick do
             if settings.controller_socket
-              settings.controller_socket.send(JSON.generate({:type => 'disconnected', :name => name}))
+              settings.controller_socket.send(JSON.generate({:type => 'disconnected', :name => socket.name}))
             end
           end
         end
