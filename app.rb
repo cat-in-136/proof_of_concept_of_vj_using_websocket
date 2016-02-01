@@ -18,6 +18,22 @@ class ClientSocket
   attr_accessor :name, :group, :socket
 end
 
+def handle_command(commands, settings)
+  msgobj = commands
+  msgobj = JSON.parse(msgobj) if msgobj.instance_of? String
+  raise ArgumentError unless msgobj.instance_of? Array
+
+  EM.next_tick do
+    settings.sockets.each do |socket|
+      sndmsg = msgobj.select do |msg|
+        target = msg["target"]
+        target.nil? || (socket.name == target) || socket.group.include?(target)
+      end
+      socket.socket.send(JSON.generate(sndmsg)) unless sndmsg.empty?
+    end
+  end
+end
+
 set :server, 'thin'
 set :sockets, []
 set :controller_socket, nil
@@ -82,27 +98,14 @@ get '/controller_socket' do
       end
       ws.onmessage do |msg|
         logger.info "-> #{msg}"
-        msgobj = nil
-
         begin
-          msgobj = JSON.parse(msg)
+          handle_command(msg, settings)
         rescue JSON::ParserError
           ws.send(JSON.generate({:type => 'error', :msg => 'Wrong JSON text'}))
-          next # break out
-        end
-        unless msgobj.instance_of? Array
+          #next # break out
+        rescue ArgumentError
           ws.send(JSON.generate({:type => 'error', :msg => 'Not an array'}))
-          next # break out
-        end
-
-        EM.next_tick do
-          settings.sockets.each do |socket|
-            sndmsg = msgobj.select do |msg|
-              target = msg["target"]
-              target.nil? || (socket.name == target) || socket.group.include?(target)
-            end
-            socket.socket.send(JSON.generate(sndmsg)) unless sndmsg.empty?
-          end
+          #next # break out
         end
       end
       ws.onclose do
