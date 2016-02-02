@@ -18,18 +18,29 @@ class ClientSocket
   attr_accessor :name, :group, :socket
 end
 
-def handle_command(commands, settings)
+def handle_commands(commands, settings)
   msgobj = commands
   msgobj = JSON.parse(msgobj) if msgobj.instance_of? String
   raise ArgumentError unless msgobj.instance_of? Array
 
-  EM.next_tick do
+  msg_queue = Hash.new
+  msgobj.each do |msg|
+    raise ArgumentError unless msg.instance_of? Hash
+    target = msg["target"]
     settings.sockets.each do |socket|
-      sndmsg = msgobj.select do |msg|
-        target = msg["target"]
-        target.nil? || (socket.name == target) || socket.group.include?(target)
+      if target.nil? || (socket.name == target) || socket.group.include?(target)
+        msg_queue[socket.name] = [] unless msg_queue.include?(socket.name)
+        msg_queue[socket.name] << msg.dup
       end
-      socket.socket.send(JSON.generate(sndmsg)) unless sndmsg.empty?
+    end
+  end
+  
+  EM.next_tick do
+    msg_queue.each do |name,sndmsg|
+      unless sndmsg.empty?
+        socket = settings.sockets.find { |v| v.name == name }
+        socket.socket.send(JSON.generate(sndmsg))
+      end
     end
   end
 end
@@ -99,7 +110,7 @@ get '/controller_socket' do
       ws.onmessage do |msg|
         logger.info "-> #{msg}"
         begin
-          handle_command(msg, settings)
+          handle_commands(msg, settings)
         rescue JSON::ParserError
           ws.send(JSON.generate({:type => 'error', :msg => 'Wrong JSON text'}))
           #next # break out
