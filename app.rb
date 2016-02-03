@@ -26,6 +26,15 @@ def handle_commands(commands, settings)
   msg_queue = Hash.new
   msgobj.each do |msg|
     raise ArgumentError unless msg.instance_of? Hash
+
+    if msg["type"] == "get_clients"
+      EM.next_tick do
+        info = {:type => :get_clients, :value => settings.sockets.map {|socket| {:name => socket.name, :group => socket.group} }}
+        settings.controller_socket.send(JSON.generate(info))
+      end
+      next # break this command
+    end
+
     target = msg["target"]
     settings.sockets.each do |socket|
       if target.nil? || (socket.name == target) || socket.group.include?(target)
