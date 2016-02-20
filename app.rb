@@ -21,11 +21,12 @@ end
 def handle_commands(commands, settings)
   msgobj = commands
   msgobj = JSON.parse(msgobj) if msgobj.instance_of? String
-  raise ArgumentError unless msgobj.instance_of? Array
+  raise ArgumentError, 'Not an Array' unless msgobj.instance_of? Array
 
   msg_queue = Hash.new
   msgobj.each do |msg|
-    raise ArgumentError unless msg.instance_of? Hash
+    raise ArgumentError, 'Command not a Hash' unless msg.instance_of? Hash
+    target = msg["target"]
 
     if msg["type"] == "get_clients"
       EM.next_tick do
@@ -33,9 +34,15 @@ def handle_commands(commands, settings)
         settings.controller_socket.send(JSON.generate(info))
       end
       next # break this command
+    elsif msg["type"] == "set_group"
+      raise ArgumentError, 'Target is not specified for set_group' if target.nil?
+      raise ArgumentError, 'Value for set_group is not an array' unless msg["value"].instance_of? Array
+      socket = settings.sockets.find do |socket| socket.name == target end
+      raise ArgumentError, "target \"#{target}\" for set_group not found" unless socket
+      socket.group = msg["value"]
+      next # break this command
     end
 
-    target = msg["target"]
     settings.sockets.each do |socket|
       if target.nil? || (socket.name == target) || socket.group.include?(target)
         msg_queue[socket.name] = [] unless msg_queue.include?(socket.name)
@@ -123,8 +130,8 @@ get '/controller_socket' do
         rescue JSON::ParserError
           ws.send(JSON.generate({:type => 'error', :msg => 'Wrong JSON text'}))
           #next # break out
-        rescue ArgumentError
-          ws.send(JSON.generate({:type => 'error', :msg => 'Not an array'}))
+        rescue ArgumentError => ex
+          ws.send(JSON.generate({:type => 'error', :msg => ex.message}))
           #next # break out
         end
       end
