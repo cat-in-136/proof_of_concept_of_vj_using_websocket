@@ -35,6 +35,16 @@ $(function(){
                 list.push(item);
             }
             $("#client-list").empty().append(list);
+        } else if (data.type === "connected") {
+            var item = $("<li></li>");
+            item.text(data.name);
+            $("#client-list").append(item);
+        } else if (data.type === "disconnected") {
+            $("li", $("#client-list")).each(function() {
+                if ($(this).text().indexOf(data.name) == 0) {
+                    $(this).remove();
+                }
+            });
         } else {
             ws.send(JSON.stringify([{type: "get_clients"}]));
         }
