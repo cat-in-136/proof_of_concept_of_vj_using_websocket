@@ -199,6 +199,7 @@ describe 'controller and viewer connection', :type => :feature do
     using_session(:controller) do
       fill_in 'message', :with => [{:type => 'background', :target => "gr-viewer1", :value => '#00ff00'}].to_json
       click_button 'send'
+      sleep 1
     end
     using_session(:viewer1) do
       expect(page).to_not have_content("body")
@@ -212,6 +213,7 @@ describe 'controller and viewer connection', :type => :feature do
     using_session(:controller) do
       fill_in 'message', :with => [{:type => 'background', :target => "gr-viewer2", :value => '#0000ff'}].to_json
       click_button 'send'
+      sleep 1
     end
     using_session(:viewer1) do
       expect(page).to_not have_content("body")
